@@ -1,24 +1,24 @@
 package llc.entity;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import llc.logic.Cell;
 import llc.logic.Logic;
+import llc.logic.Player;
 import llc.util.MathUtil;
 
 import org.lwjgl.util.vector.Vector3f;
+
+import de.teamdna.databundle.DataBundle;
 
 /**
  * The entity base class.
  * Contains player and health.
  * @author MaxiHoeve14
  */
-public abstract class Entity implements Serializable {
-	
-	private static final long serialVersionUID = 1L;
+public abstract class Entity {
 	
 	public int health;
 	public int maxHealth;
@@ -26,7 +26,7 @@ public abstract class Entity implements Serializable {
 	protected float x;
 	protected float y;
 	
-	protected int player;
+	protected Player player;
 	
 	// Variables for move animation
 	public Vector3f posVec;
@@ -41,11 +41,21 @@ public abstract class Entity implements Serializable {
 	 * @return cost to pay for an Entity of this type
 	 */
 	public abstract int getCost();
+
+	public Entity(DataBundle data, List<Player> players) {
+		this.x = data.getFloat("x");
+		this.y = data.getFloat("y");
+		this.player = players.get(data.getInt("playerID"));
+		this.health = data.getInt("health");
+		this.maxHealth = data.getInt("maxHealth");
+	}
 	
 	/**
 	 * Creates a new entity with the amount of 100 health
 	 */
-	public Entity() {
+	public Entity(float x, float y) {
+		this.x = x;
+		this.y = y;
 		this.health = this.maxHealth = 100;
 	}
 
@@ -53,14 +63,16 @@ public abstract class Entity implements Serializable {
 	 * Creates a new entity with given amount of health
 	 * @param maxHealth The amount of health
 	 */
-	public Entity(int health) {
+	public Entity(float x, float y, int health) {
+		this.x = x;
+		this.y = y;
 		this.health = this.maxHealth = health;
 	}
 	
 	/**
 	 * Gets the player the entity belongs to.
 	 */
-	public int getPlayer() {
+	public Player getPlayer() {
 		return player;
 	}
 
@@ -68,7 +80,7 @@ public abstract class Entity implements Serializable {
 	 * Sets the player the entity belongs to.
 	 * @param player The player
 	 */
-	public void setPlayer(int player) {
+	public void setPlayer(Player player) {
 		this.player = player;
 	}
 	
@@ -108,6 +120,8 @@ public abstract class Entity implements Serializable {
 	 * Starts the move animation
 	 */
 	public void initMoveRoutine(Logic logic, List<Cell> path, boolean countMove, boolean shouldReturn) {
+		if(path == null) return;
+		
 		this.logic = logic;
 		this.posVec = new Vector3f(this.x, this.y, 0);
 		
@@ -153,4 +167,17 @@ public abstract class Entity implements Serializable {
 	 */
 	public abstract String getName();
 
+	public DataBundle writeToDataBundle() {
+		DataBundle data = new DataBundle();
+		
+		data.setFloat("x", x);
+		data.setFloat("y", y);
+		data.setInt("playerID", player.getPlayerID());
+		data.setInt("health", health);
+		data.setInt("maxHealth", maxHealth);
+		data.setString("type", this.getClass().toString());
+		
+		return data;
+	}
+	
 }

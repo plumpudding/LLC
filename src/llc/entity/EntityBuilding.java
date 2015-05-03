@@ -1,9 +1,24 @@
 package llc.entity;
 
+import java.util.List;
+
+import llc.logic.Player;
+import de.teamdna.databundle.DataBundle;
+
 /**
  * @author MaxiHoeve14
  */
 public abstract class EntityBuilding extends Entity {
 
-	private static final long serialVersionUID = 7L;
+	public EntityBuilding(float x, float y, int health) {
+		super(x, y, health);
+	}
+
+	public EntityBuilding(DataBundle data, List<Player> players) {
+		super(data, players);
+	}
+
+	public EntityBuilding(float x, float y) {
+		super(x, y);
+	}
 }

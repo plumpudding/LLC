@@ -1,18 +1,21 @@
 package llc.logic;
 
-import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 
+import llc.entity.Entity;
+import de.teamdna.databundle.DataBundle;
 
 /**
  * Represents a loaded Grid
  */
-public class Grid implements Serializable{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 10L;
+public class Grid {
+	
 	private final int heigth;
 	private final int width;
+	
+	private List<Entity> entities = new ArrayList<Entity>();
 	
 	/**
 	 * Two dimensional array of cells. The first index represents the y-axis, the second one the x-axis
@@ -54,5 +57,27 @@ public class Grid implements Serializable{
 
 	public int getWidth() {
 		return width;
+	}
+
+	public void addEntity(Entity entity) {
+		entities.add(entity);
+	}
+	
+	public void removeEntity(Entity entity) {
+		entities.remove(entity);
+	}
+	
+	public void save(DataBundle data) {
+		data.setInt("entitiesSize", entities.size());
+		for (int i = 0; i < entities.size(); i++){
+			data.setBundle("entity" + i, entities.get(i).writeToDataBundle());
+		}
+	}
+
+	public void read(DataBundle data, List<Player> players) throws ClassNotFoundException, NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		for (int i = 0; i < data.getInt("entitiesSize"); i++) {
+			Entity e = (Entity) Class.forName(data.getBundle("entity" + i).getString("type").substring(6)).asSubclass(Entity.class).getConstructor( DataBundle.class, List.class ).newInstance(new Object[] { data.getBundle("entity" + i), players });
+			getCellAt((int) e.getX(), (int) e.getY()).setEntity(e);
+		}
 	}
 }

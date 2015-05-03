@@ -1,8 +1,24 @@
 package llc.entity;
 
+import java.util.List;
+
+import llc.logic.Player;
+import de.teamdna.databundle.DataBundle;
+
 public class EntityWorker extends EntityMovable implements IRepairer {
 
-	private static final long serialVersionUID = 9L;
+	public EntityWorker(float x, float y, int health) {
+		super(x, y, health);
+	}
+
+	public EntityWorker(float x, float y) {
+		super(x, y);
+	}
+
+	public EntityWorker(DataBundle data, List<Player> players) {
+		super(data, players);
+	}
+
 	public static final int cost = 25;
 
 	@Override

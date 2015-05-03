@@ -337,27 +337,16 @@ public class Renderer {
 		glColor3f(1, 1, 1);
 		
 		glBegin(GL_TRIANGLES);
-		glTexCoord2f(0, 1);
-		glVertex3f(0, 0, 0);
-		
-		glTexCoord2f(1, 1);
-		glVertex3f(width, 0, 0);
-		
-		glTexCoord2f(0, 0);
-		glVertex3f(0, height, 0);
+		glTexCoord2f(0, 1); glVertex3f(0, 0, 0);
+		glTexCoord2f(1, 1); glVertex3f(width, 0, 0);
+		glTexCoord2f(0, 0); glVertex3f(0, height, 0);
 
-		glTexCoord2f(1, 1);
-		glVertex3f(width, 0, 0);
-		
-		glTexCoord2f(1, 0);
-		glVertex3f(width, height, 0);
-
-		glTexCoord2f(0, 0);
-		glVertex3f(0, height, 0);
+		glTexCoord2f(1, 1); glVertex3f(width, 0, 0);
+		glTexCoord2f(1, 0); glVertex3f(width, height, 0);
+		glTexCoord2f(0, 0); glVertex3f(0, height, 0);
 		glEnd();
 		
 		RenderUtil.unbindShader();
-
 		glActiveTexture(GL_TEXTURE0);
 	}
 	
@@ -368,7 +357,6 @@ public class Renderer {
 		triangles = new Triangle[height][width][2];
 		for(int y = 0; y < height; y++) {
 			for(int x = 0; x < width; x++) {
-				//Generating heigth coordinates
 				float currentHeight = cells[y][x].height;
 				float[][] heights = new float [3][3];
 				heights[0][0] = y > 0 && x > 0 ? cells[y - 1][x - 1].height : currentHeight;
@@ -435,10 +423,6 @@ public class Renderer {
 			glColor3f(0.3f, 1f, 0.3f);
 			drawCell(state.selectedCell, state.selectedCell.y, state.selectedCell.x, false);
 		}
-		if(state.hoveredCell != null && state.selectedCell == state.hoveredCell) {
-			glColor3f(1, 0.5f, 1);
-			drawCell(state.hoveredCell, state.hoveredCell.y, state.hoveredCell.x, false);
-		}
 		
 		RenderUtil.unbindShader();
 		glDisable(GL_TEXTURE_2D);
@@ -501,7 +485,7 @@ public class Renderer {
 					Color.black.bind();
 					RenderUtil.drawQuad(0, 0, barWidth, 0.1F);
 					
-					if(state.getActivePlayer().playerID == e.getPlayer()) Color.green.bind();
+					if(state.getActivePlayer() == e.getPlayer()) Color.green.bind();
 					else Color.red.bind();
 					RenderUtil.drawQuad(0, 0, e.health / 160F, 0.1F);
 					
@@ -620,7 +604,6 @@ public class Renderer {
 	}
 	
 	private Vector3f getTerrainColorFromHeight(float height) {
-		
 		// find gradient colors around height
 		int upper;
 		for(upper = 0; upper < colors.size(); upper++) {

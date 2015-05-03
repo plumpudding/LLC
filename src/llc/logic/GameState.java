@@ -1,101 +1,127 @@
 package llc.logic;
 
 import java.io.File;
-import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 
-import llc.engine.Camera;
+import llc.LLC;
+import llc.input.HotkeyManager;
+import llc.loading.GameLoader;
+import de.teamdna.databundle.DataBundle;
+import de.teamdna.databundle.ISavable;
 
-public class GameState implements Serializable {
+public class GameState implements ISavable{
 
-	private static final long serialVersionUID = 4L;
-	
 	private Grid grid;
-	private Camera camera;
+	private HotkeyManager hotKeys;
 	
-	private Player player1, player2;
-	private Cell townHall1, townHall2;
+	private List<Player> players = new ArrayList<Player>();
 	public Cell hoveredCell, selectedCell;
-	
-	public int activePlayer;
+
+	public Player activePlayer;
 	public int moveCount = 0;
-	
+
 	public final String levelName;
 	public final String levelPath;
-	
+
 	public boolean isGameOver = false;
 	public Player winner;
-	
-	public GameState(Grid grid, Camera camera, File level) {
+
+	public GameState(Grid grid, File level, List<Cell> bases) {
+		hotKeys = new HotkeyManager(this);
 		this.grid = grid;
-		this.camera = camera;
 		
-		player1 = new Player(1, 100);
-		player2 = new Player(2, 100);
+		for (int i = 0; i < bases.size(); i++) {
+			players.add(new Player("Player: " + i, bases.get(i), i));
+			grid.addEntity(bases.get(i).getEntity());
+		}
+		setActivePlayer(getPlayer(0));
 		
 		this.levelName = level.getName();
-		this.levelPath = level.getPath();
+		this.levelPath = level.getParentFile().getAbsolutePath();
 	}
-	
+
+	public GameState(DataBundle data, GameLoader gameLoader) {
+		this.levelName = data.getString("levelName");
+		this.levelPath = data.getString("levelPath");
+		this.moveCount = data.getInt("moveCount");
+		GameState newgs = gameLoader.createNewGame(levelPath + "\\" + levelName);
+		this.grid = newgs.grid;
+		for (int i = 0; i < data.getInt("playersSize"); i++) {
+			this.players.add(new Player(data.getBundle("player" + i), newgs.getPlayer(i).getTownHall()));
+		}
+		setActivePlayer(getPlayer(data.getInt("activePlayerID")));
+		this.hotKeys = new HotkeyManager(data.getBundle("hotkeys"), this);
+		try {
+			this.grid.read(data.getBundle("grid"), players);
+		} catch (ClassNotFoundException | NoSuchMethodException
+				| SecurityException | InstantiationException
+				| IllegalAccessException | IllegalArgumentException
+				| InvocationTargetException e) {
+			e.printStackTrace();
+		}
+		
+	}
+
 	public Grid getGrid() {
 		return grid;
 	}
 
 	public void setActivePlayer(Player active) {
-		if (player1.equals(active)) {
-			activePlayer = 1;
-		} else if (player2.equals(active)) {
-			activePlayer = 2;
-		} else {
-			throw new IllegalArgumentException("Given Player argument does not exist");
-		}
-		
-		this.camera.focusCell(this.getActivePlayerTownHallLocation(), true);
+		this.activePlayer = active;
+		LLC.getLLC().getCamera().focusCell(active.getTownHall(), true);
+		selectedCell = active.getTownHall();
 	}
 
-	public Player getPlayer1() {
-		return player1;
-	}
-
-	public Player getPlayer2() {
-		return player2;
-	}
 	public Player getActivePlayer() {
-		if (activePlayer == 1) {
-			return player1;
-		} else {
-			return player2;
-		}
-	}
-	public Player getInActivePlayer() {
-		if (activePlayer == 1) {
-			return player2;
-		} else {
-			return player1;
-		}
-	}
-
-	public Cell getTownHall1Cell() {
-		return townHall1;
-	}
-
-	public void setTownHall1Cell(Cell townHall1) {
-		this.townHall1 = townHall1;
-	}
-
-	public Cell getTownHall2Cell() {
-		return townHall2;
-	}
-
-	public void setTownHall2Cell(Cell townHall2) {
-		this.townHall2 = townHall2;
+		return activePlayer;
 	}
 	
-	public Cell getActivePlayerTownHallLocation() {
-		if (activePlayer == 1) {
-			return townHall1;
-		}
-		else {
-			return townHall2;
+	public List<Player> getInActivePlayers() {
+		List<Player> l = new ArrayList<Player>(players);
+		l.remove(activePlayer.getPlayerID());
+		return l;
+	}
+
+	public Player getNextPlayer() {
+		if (players.size() -1 > activePlayer.getPlayerID()) {
+			return players.get(activePlayer.getPlayerID() + 1);
+		} else {
+			return players.get(0);
 		}
 	}
+
+	public List<Player> getPlayers() {
+		return players;
+	}
+	@Override
+	public void save(DataBundle data) {
+		data.setInt("moveCount", moveCount);
+		data.setInt("activePlayerID", activePlayer.getPlayerID());
+
+		data.setInt("playersSize", players.size());
+		for (int i = 0; i < players.size(); i++){
+			DataBundle d = new DataBundle();
+			players.get(i).save(d);
+			data.setBundle("player" + i, d);
+		}
+		
+		data.setString("levelName", levelName);
+		data.setString("levelPath", levelPath);
+
+		DataBundle d = new DataBundle();
+		grid.save(d);
+		data.setBundle("grid", d);
+		DataBundle hd = new DataBundle();
+		hotKeys.save(hd);
+		data.setBundle("hotkeys", hd);
+	}
+
+	public Player getPlayer(int i) {
+		return players.get(i);
+	}
+
+	@Override
+	public void read(DataBundle arg0) {}
 }

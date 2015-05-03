@@ -57,7 +57,7 @@ public class GUIIngame extends GUI {
 		
 		this.elements.add(new GUIText(this, 10 * scaleX, 640 * scaleY, 0, 0, "", Color.white) {
 			public void update(int x, int y) {
-				this.setText(strPlayer + logic.getGameState().getActivePlayer().playerID);
+				this.setText(logic.getGameState().getActivePlayer().getName());
 			}
 		});
 		
@@ -75,14 +75,19 @@ public class GUIIngame extends GUI {
 		
 		this.baseGroup.add(new GUIHotkeyButton(this, (811 + 50 * 0) * scaleX, 611 * scaleY, 46 * scaleX, 46 * scaleY, Translator.translate("gui.desc.buyWarrior"), Keyboard.KEY_A) {
 			public void onClick(int x, int y) {
-				logic.buyEntity(new EntityWarrior());
+				logic.buyEntity(new EntityWarrior(0, 0));
 			}
 		});
 		
 		this.baseGroup.add(new GUIHotkeyButton(this, (811 + 50 * 1) * scaleX, 611 * scaleY, 46 * scaleX, 46 * scaleY, Translator.translate("gui.desc.buyWorker"), Keyboard.KEY_W) {
 			public void onClick(int x, int y) {
-				logic.buyEntity(new EntityWorker());
+				logic.buyEntity(new EntityWorker(0, 0));
 			}
+		});
+		this.workerGroup.add(new GUIHotkeyButton(this, (811 + 50 * 0) * scaleX, 611 * scaleY, 46 * scaleX, 46 * scaleY, Translator.translate("gui.desc.healBase"), Keyboard.KEY_H) {
+			public void onClick(int x, int y) {
+				logic.healBase(x, y);
+ 			}
 		});
 	}
 	

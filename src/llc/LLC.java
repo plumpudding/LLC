@@ -18,6 +18,7 @@ import llc.input.Input;
 import llc.input.KeyBinding;
 import llc.input.KeyboardListener;
 import llc.loading.GameLoader;
+import llc.loading.Settings;
 import llc.logic.Cell;
 import llc.logic.Logic;
 import llc.logic.Player;
@@ -38,6 +39,7 @@ public class LLC implements IKeybindingListener {
 	private boolean isRunning = false;
 	
 	private Profiler profiler = new Profiler();
+	private Settings settings;
 	private Camera camera;
 	private Input input;
 	private Renderer renderer;
@@ -62,10 +64,8 @@ public class LLC implements IKeybindingListener {
 	
 	public LLC() {
 		instance = this;
-		
 		this.camera = new Camera(new Vector3f(4, 4, 10), new Vector3f(0, 1.5f, -1), new Vector3f(0, 0, 1));
 		this.input = new Input(this, this.camera);
-		this.startNewGame();
 		
 		this.input.addFireListener(new Input.LogicListener() {
 
@@ -97,6 +97,8 @@ public class LLC implements IKeybindingListener {
 		this.keyboardListener.registerEventHandler(this);
 		this.keyboardListener.registerKeyBinding(new KeyBinding("func.fullscreen", Keyboard.KEY_F11, false));
 		this.keyboardListener.registerKeyBinding(new KeyBinding("gui.pause", Keyboard.KEY_ESCAPE, false));
+
+		this.startNewGame();
 	}
 	
 	/**
@@ -119,16 +121,17 @@ public class LLC implements IKeybindingListener {
 		this.profiler.endStart("Setup GUI Renderer");
 		this.guiRenderer = new GUIRenderer(this.input, this.soundEngine);
 		this.guiRenderer.openGUI(new GUIIngame(this.logic, gameLoader));
+		this.profiler.endStart("Loading Settings");
+		this.settings = Settings.loadSettings();
 		this.profiler.endStart("Setup Audio Engine");
 		
 		this.soundEngine.addSound("button_click", new Sound("res/sound/gui_click.wav", false));
 		this.soundEngine.addSound("music_1", new Sound("res/sound/music_1.wav", true));
-		
 		this.soundEngine.init();
-		this.soundEngine.playSound("music_1");
+		if(this.settings.getPlayBgSound()) this.soundEngine.playSound("music_1");
 		
-		this.soundEngine.bindCamera(this.camera);
 		this.profiler.end();
+		this.soundEngine.bindCamera(this.camera);
 		this.beginLoop();
 	}
 	
@@ -184,6 +187,12 @@ public class LLC implements IKeybindingListener {
 			// Audio
 			this.profiler.endStart("Audio updates");
 			this.soundEngine.update(delta);
+			if(this.isGamePaused){
+				this.soundEngine.pauseSound("music_1");
+			} else {
+				if(this.settings.getPlayBgSound()) this.soundEngine.playSound("music_1");
+			}
+			
 			
 			// Rendering
 			this.profiler.endStart("Render game");
@@ -203,6 +212,7 @@ public class LLC implements IKeybindingListener {
 		}
 
 		this.soundEngine.dispose();
+		Settings.saveSettings(this.settings);
 		if(Display.isCreated()) Display.destroy();
 	}
 	
@@ -281,9 +291,17 @@ public class LLC implements IKeybindingListener {
 	 */
 	public void startNewGame() {
 		this.gameLoader = new GameLoader();
-		this.logic = new Logic(this.gameLoader.createNewGame("res/maps/areas/map-2_areas.png", this.camera), this.input);
+		this.logic = new Logic(gameLoader.createNewGame("res/maps/areas/map-2_areas.png"), this.input);
 		if(this.width != 0) this.guiRenderer.openGUI(new GUIIngame(this.logic, gameLoader));
 		this.isGamePaused = false;
+	}
+
+	public Settings getSettings() {
+		return this.settings;
+	}
+
+	public Logic getLogic() {
+		return this.logic;
 	}
 	
 }

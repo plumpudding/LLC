@@ -1,12 +1,27 @@
 package llc.entity;
 
+import java.util.List;
+
+import llc.logic.Player;
+import de.teamdna.databundle.DataBundle;
+
 /**
  * Base class for movable entities.
  * @author MaxiHoeve14
  */
 public abstract class EntityMovable extends Entity {
 
-	private static final long serialVersionUID = 6L;
+	public EntityMovable(float x, float y, int health) {
+		super(x, y, health);
+	}
+
+	public EntityMovable(DataBundle data, List<Player> players) {
+		super(data, players);
+	}
+
+	public EntityMovable(float x, float y) {
+		super(x, y);
+	}
 	
 	private float moveSpeed = 1;
 	private int moveRange = 8;
